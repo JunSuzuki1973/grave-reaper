@@ -1,0 +1,64 @@
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  background: #000;
+  overflow: hidden;
+}
+
+body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#game-container {
+  position: relative;
+}
+
+/* Pixel-art world: nearest-neighbour, integer scaled by JS */
+#game-canvas {
+  display: block;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+/* Crisp UI overlay: smooth, high-res text. Sits exactly on top. */
+#ui-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  image-rendering: auto;
+  pointer-events: none;
+}
+
+/* 全画面トグルボタン（ビューポート右上に固定） */
+#fs-btn {
+  position: fixed;
+  top: 10px;
+  right: 12px;
+  z-index: 10;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  font-size: 18px;
+  line-height: 32px;
+  color: #e8d8ff;
+  background: rgba(20, 8, 30, 0.55);
+  border: 1px solid rgba(200, 150, 255, 0.5);
+  border-radius: 6px;
+  cursor: pointer;
+  opacity: 0.5;
+  transition: opacity 0.15s, background 0.15s;
+}
+#fs-btn:hover {
+  opacity: 1;
+  background: rgba(60, 20, 90, 0.8);
+}
+/* 全画面中はボタンを控えめに（必要なら hover で出る） */
+:fullscreen #fs-btn { opacity: 0.25; }

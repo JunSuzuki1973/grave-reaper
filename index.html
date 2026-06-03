@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>Grave Reaper</title>
+  <link rel="stylesheet" href="css/style.css?v=16">
+</head>
+<body>
+  <div id="game-container">
+    <!-- Pixel-art world (low-res, nearest-neighbour upscaling) -->
+    <canvas id="game-canvas" width="480" height="270"></canvas>
+    <!-- Crisp UI overlay (high-res, smooth text) -->
+    <canvas id="ui-canvas"></canvas>
+  </div>
+  <!-- 全画面表示トグル（Fキーでも切替可） -->
+  <button id="fs-btn" type="button" title="全画面表示 (F)" aria-label="全画面表示">⛶</button>
+  <script type="module" src="src/main.js?v=16"></script>
+</body>
+</html>
