@@ -114,7 +114,7 @@ export class TitleScreen {
     ctx.fillStyle = '#55cc77';
     ctx.font = `bold 9px ${JP_FONT}`;
     ctx.textAlign = 'right';
-    ctx.fillText('build v18', W - 6, H - 6);
+    ctx.fillText('build v19', W - 6, H - 6);
   }
 
   _drawCharSelect(ctx, W, H) {
