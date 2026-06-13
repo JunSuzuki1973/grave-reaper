@@ -20,7 +20,7 @@ import { LevelUpUI } from './ui/levelup.js';
 import { GameOverScreen } from './ui/gameover.js';
 import { drawHUD } from './ui/hud.js';
 import { LeaderboardScreen } from './ui/Leaderboard.js';
-import { saveScore, isArcadeMode, isBase44Available, getCurrentUserName, signIn, signOut } from './arcade/base44client.js';
+import { saveScore, isArcadeMode, isBase44Available, getCurrentUserName, signIn, signOut, refreshUser } from './arcade/base44client.js';
 
 // ─── Constants ─────────────────────────────────────────────────────────────
 const CANVAS_W = 480;
@@ -172,24 +172,19 @@ function refreshArcadeBar() {
   if (arcadeUser) arcadeUser.textContent = logged ? `${getCurrentUserName()} さん` : '';
 }
 
-if (loginBtn) loginBtn.addEventListener('click', async () => {
-  loginBtn.blur();
-  await signIn();
-  refreshArcadeBar();
-});
-if (logoutBtn) logoutBtn.addEventListener('click', async () => {
-  logoutBtn.blur();
-  await signOut();
-  refreshArcadeBar();
-});
+// ログイン/ログアウトは OAuth リダイレクト（ページ遷移）。戻ってきた時に refreshUser で反映。
+if (loginBtn)  loginBtn.addEventListener('click', () => { loginBtn.blur(); signIn(); });
+if (logoutBtn) logoutBtn.addEventListener('click', () => { logoutBtn.blur(); signOut(); });
 if (rankBtn) rankBtn.addEventListener('click', async () => {
   rankBtn.blur();
   showLeaderboard = true;
   refreshArcadeBar();
   await leaderboardScreen.load();
 });
-// SDK 読込完了でボタン状態を更新
-window.addEventListener('base44ready', refreshArcadeBar);
+// SDK 読込完了 → ログイン状態を取得してボタン状態を更新
+window.addEventListener('base44ready', () => { refreshUser().then(refreshArcadeBar); });
+// 既に読込済みなら（イベントを取り逃した場合に備え）起動時にも一度確認
+if (isBase44Available()) refreshUser().then(refreshArcadeBar);
 
 // v16 にはスコア概念が無いため戦績から合成（撃破/ジェム/時間/レベル/勝利）
 function computeArcadeScore(win) {

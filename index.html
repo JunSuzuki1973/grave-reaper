@@ -7,13 +7,15 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>Grave Reaper</title>
-  <link rel="stylesheet" href="css/style.css?v=17">
-  <!-- Base44 SDK（ゲーセン化：オンラインランキング）。読込失敗時はバニラモードで動作 -->
+  <link rel="stylesheet" href="css/style.css?v=18">
+  <!-- Base44 SDK（ゲーセン化：オンラインランキング）。読込失敗時はバニラモードで動作。
+       公式パッケージ @base44/sdk を ESM CDN(esm.sh) から読み込む。 -->
   <script type="module">
     try {
-      const { createClient } = await import('https://cdn.base44.com/sdk.esm.js');
+      const { createClient } = await import('https://esm.sh/@base44/sdk');
       window.base44 = createClient({ appId: '6a2d01f339fbcea2e6958c2d' });
       window.dispatchEvent(new Event('base44ready'));
+      console.info('Base44 SDK ready');
     } catch (e) {
       console.warn('Base44 SDK 未読込のためバニラモードで動作します:', e);
     }
@@ -37,6 +39,6 @@
     <button id="logout-btn" type="button" hidden>ログアウト</button>
   </div>
 
-  <script type="module" src="src/main.js?v=17"></script>
+  <script type="module" src="src/main.js?v=18"></script>
 </body>
 </html>
