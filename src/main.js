@@ -305,6 +305,39 @@ function setStage(num) {
   }
 }
 
+// ─── Base44（親iframe）連携：ゲームオーバー時にスコアを postMessage で送信 ─────
+// Base44 アプリ内で iframe 読み込みされている場合のみ、親ウィンドウへ結果を送る。
+// 既存のゲームロジックには干渉せず、終了処理の直後に呼び出すだけ。
+// v16 にはスコア概念が無いため戦績から合成（撃破×100＋ジェム×10＋秒×5＋Lv×500＋勝利50000）。
+function postGameOverToParent(isVictory) {
+  try {
+    // iframe 内でない（親＝自分）なら送らない
+    if (!window.parent || window.parent === window) return;
+    const score = Math.floor(
+      gameStats.killCount * 100 +
+      gameStats.totalGems * 10 +
+      Math.floor(gameStats.elapsedTime) * 5 +
+      player.level * 500 +
+      (isVictory ? 50000 : 0)
+    );
+    window.parent.postMessage({
+      type: 'GRAVE_REAPER_GAME_OVER',
+      payload: {
+        score,
+        stage: currentStage,
+        level: player.level,
+        kills: gameStats.killCount,
+        gems: gameStats.totalGems,
+        victory: !!isVictory,
+        play_time: Math.floor(gameStats.elapsedTime),
+      },
+    }, '*');
+  } catch (e) {
+    // 送信失敗はゲーム進行に影響させない
+    console.warn('postMessage to parent failed:', e);
+  }
+}
+
 // ボス撃破 → 次ステージへ（最終ステージなら全クリア）
 function onBossDefeated() {
   if (currentStage >= NUM_STAGES) {
@@ -316,6 +349,7 @@ function onBossDefeated() {
       gems: gameStats.totalGems,
       victory: true,
     });
+    postGameOverToParent(true);   // 親(Base44)へ結果送信
     state = STATE.GAMEOVER;
     return;
   }
@@ -451,6 +485,7 @@ function updatePlaying(dt) {
       level: player.level,
       gems: gameStats.totalGems,
     });
+    postGameOverToParent(false);   // 親(Base44)へ結果送信
     state = STATE.GAMEOVER;
   }
 }
