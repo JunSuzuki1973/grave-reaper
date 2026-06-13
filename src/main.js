@@ -1,6 +1,6 @@
 // Main entry point: game state machine and world management
 
-import { initInput, clearFrame, isConfirm, isJustPressed } from './engine/input.js';
+import { initInput, clearFrame, isConfirm } from './engine/input.js';
 import { startLoop } from './engine/loop.js';
 import { loadSprites, loadBackgrounds, getBackground, drawSprite } from './engine/sprites.js';
 import { camera, updateCamera } from './engine/camera.js';
@@ -19,8 +19,6 @@ import { TitleScreen } from './ui/title.js';
 import { LevelUpUI } from './ui/levelup.js';
 import { GameOverScreen } from './ui/gameover.js';
 import { drawHUD } from './ui/hud.js';
-import { LeaderboardScreen } from './ui/Leaderboard.js';
-import { saveScore, isArcadeMode, isBase44Available, getCurrentUserName, signIn, signOut, refreshUser } from './arcade/base44client.js';
 
 // ─── Constants ─────────────────────────────────────────────────────────────
 const CANVAS_W = 480;
@@ -146,66 +144,6 @@ window.addEventListener('keydown', (e) => {
 });
 const fsBtn = document.getElementById('fs-btn');
 if (fsBtn) fsBtn.addEventListener('click', () => { toggleFullscreen(); fsBtn.blur(); });
-
-// ─── ゲーセン化：Base44 ログイン / オンラインランキング ───────────────────────
-// バニラ版（未ログイン or SDK未読込）は既存の動作を100%維持。
-const leaderboardScreen = new LeaderboardScreen();
-let showLeaderboard = false;
-
-const arcadeBar  = document.getElementById('arcade-bar');
-const arcadeUser = document.getElementById('arcade-user');
-const loginBtn   = document.getElementById('arcade-login');
-const rankBtn    = document.getElementById('rank-btn');
-const logoutBtn  = document.getElementById('logout-btn');
-
-// タイトル画面でのみ操作バーを表示し、ログイン状態でボタンを出し分け
-function refreshArcadeBar() {
-  if (!arcadeBar) return;
-  const onTitle = state === STATE.TITLE && !showLeaderboard;
-  arcadeBar.hidden = !onTitle;
-  if (!onTitle) return;
-  const avail = isBase44Available();
-  const logged = isArcadeMode();
-  if (loginBtn)  loginBtn.hidden  = !avail || logged;   // SDK未読込ならログインも出さない
-  if (rankBtn)   rankBtn.hidden   = !logged;
-  if (logoutBtn) logoutBtn.hidden = !logged;
-  if (arcadeUser) arcadeUser.textContent = logged ? `${getCurrentUserName()} さん` : '';
-}
-
-// ログイン/ログアウトは OAuth リダイレクト（ページ遷移）。戻ってきた時に refreshUser で反映。
-if (loginBtn)  loginBtn.addEventListener('click', () => { loginBtn.blur(); signIn(); });
-if (logoutBtn) logoutBtn.addEventListener('click', () => { logoutBtn.blur(); signOut(); });
-if (rankBtn) rankBtn.addEventListener('click', async () => {
-  rankBtn.blur();
-  showLeaderboard = true;
-  refreshArcadeBar();
-  await leaderboardScreen.load();
-});
-// SDK 読込完了 → ログイン状態を取得してボタン状態を更新
-window.addEventListener('base44ready', () => { refreshUser().then(refreshArcadeBar); });
-// 既に読込済みなら（イベントを取り逃した場合に備え）起動時にも一度確認
-if (isBase44Available()) refreshUser().then(refreshArcadeBar);
-
-// v16 にはスコア概念が無いため戦績から合成（撃破/ジェム/時間/レベル/勝利）
-function computeArcadeScore(win) {
-  return Math.floor(
-    gameStats.killCount * 100 +
-    gameStats.totalGems * 10 +
-    Math.floor(gameStats.elapsedTime) * 5 +
-    player.level * 500 +
-    (win ? 50000 : 0)
-  );
-}
-// ゲームオーバー/クリア時にスコア送信（未ログインなら no-op）
-function submitArcadeScore(win) {
-  if (!isArcadeMode()) return;
-  saveScore({
-    score: computeArcadeScore(win),
-    stage: currentStage,
-    difficulty: (difficulty && difficulty.name) ? difficulty.name : 'normal',
-    play_time: Math.floor(gameStats.elapsedTime),
-  });
-}
 
 function clearUI() {
   uiCtx.save();
@@ -378,7 +316,6 @@ function onBossDefeated() {
       gems: gameStats.totalGems,
       victory: true,
     });
-    submitArcadeScore(true);   // ゲーセン版：オンラインランキングへ送信
     state = STATE.GAMEOVER;
     return;
   }
@@ -409,11 +346,6 @@ function showLevelUpScreen() {
 
 // ─── Update functions ──────────────────────────────────────────────────────
 function updateTitle(dt) {
-  // ランキング表示中は Esc / 決定で閉じる（タイトル操作はブロック）
-  if (showLeaderboard) {
-    if (isJustPressed('Escape') || isConfirm()) { showLeaderboard = false; refreshArcadeBar(); }
-    return;
-  }
   const result = titleScreen.update(dt);
   if (result && result.action === 'start') {
     startBGM();   // Start BGM on first confirmed user interaction
@@ -519,7 +451,6 @@ function updatePlaying(dt) {
       level: player.level,
       gems: gameStats.totalGems,
     });
-    submitArcadeScore(false);   // ゲーセン版：オンラインランキングへ送信
     state = STATE.GAMEOVER;
   }
 }
@@ -603,16 +534,12 @@ function render() {
   ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
   clearUI();   // clear crisp overlay each frame
 
-  // ゲーセン操作バーの表示制御（タイトル時のみ）
-  refreshArcadeBar();
-
   const camX = camera.x;
 
   if (state === STATE.TITLE) {
     // World background on pixel canvas, all text on crisp UI canvas.
     drawBackground(ctx, titleScreen.bgX);
     titleScreen.draw(uiCtx);
-    if (showLeaderboard) leaderboardScreen.draw(uiCtx);  // ランキング overlay
     return;
   }
 

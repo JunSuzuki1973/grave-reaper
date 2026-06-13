@@ -12,8 +12,3 @@ assets/source/
 # OS / エディタ
 .DS_Store
 Thumbs.db
-
-# Base44 サイトホスティング（ゲーセン版デプロイ）
-dist/
-node_modules/
-base44/.app.jsonc

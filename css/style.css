@@ -62,35 +62,3 @@ body {
 }
 /* 全画面中はボタンを控えめに（必要なら hover で出る） */
 :fullscreen #fs-btn { opacity: 0.25; }
-
-/* ゲーセン化：ログイン/ランキング操作バー（ビューポート左下に固定） */
-#arcade-bar {
-  position: fixed;
-  left: 12px;
-  bottom: 12px;
-  z-index: 10;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-family: 'Yu Gothic', 'Meiryo', sans-serif;
-}
-#arcade-bar[hidden] { display: none; }
-#arcade-bar button {
-  padding: 6px 12px;
-  font-size: 13px;
-  color: #ffe6b0;
-  background: rgba(28, 10, 36, 0.82);
-  border: 1px solid rgba(220, 170, 90, 0.7);
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background 0.15s, transform 0.1s;
-}
-#arcade-bar button:hover { background: rgba(70, 26, 90, 0.92); }
-#arcade-bar button:active { transform: translateY(1px); }
-#arcade-bar button[hidden] { display: none; }
-#arcade-user {
-  color: #ffd66b;
-  font-size: 12px;
-  text-shadow: 0 1px 2px #000;
-}
-#arcade-user:empty { display: none; }
