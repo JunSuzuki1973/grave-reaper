@@ -14,6 +14,8 @@ export class GameOverScreen {
     this.blinkTimer = 0;
     this.blinkOn = true;
     this.showTimer = 0;
+    // 「ランキングを見る」ボタンの当たり判定（論理480×270座標）。main がクリック判定に使用。
+    this.rankingBtnRect = null;
   }
 
   show(stats) {
@@ -34,6 +36,7 @@ export class GameOverScreen {
     // Prevent accidental skip — require 1 second before input
     if (this.showTimer < 1.0) return null;
 
+    if (isJustPressed('KeyL')) return 'ranking';   // ランキングを見る（クリックでも可）
     if (isJustPressed('KeyR')) return 'retry';
     if (isConfirm()) return 'title';
 
@@ -72,11 +75,30 @@ export class GameOverScreen {
       ctx.fillText(`総ジェム　：${this.stats.gems}`,            W / 2, statsY + 66);
     }
 
-    // 操作
+    // ── 「ランキングを見る」ボタン（レトロ調・クリック可能）──
+    const bw = 176, bh = 28;
+    const bx = W / 2 - bw / 2, by = 196;
+    this.rankingBtnRect = { x: bx, y: by, w: bw, h: bh };
+    // 枠付きボタン（暗い背景＋金枠で既存UIに馴染ませる）
+    ctx.fillStyle = 'rgba(34,18,8,0.92)';
+    ctx.fillRect(bx, by, bw, bh);
+    ctx.strokeStyle = this.blinkOn ? '#ffd24a' : '#aa7722';   // 軽く明滅して押せると分かるように
+    ctx.lineWidth = 2;
+    ctx.strokeRect(bx + 1, by + 1, bw - 2, bh - 2);
+    ctx.fillStyle = '#ffe07a';
+    ctx.font = `bold 13px ${JP}`;
+    ctx.fillText('🏆 ランキングを見る', W / 2, by + 19);
+
+    // ボタン下の補助ヒント
+    ctx.fillStyle = '#aa9988';
+    ctx.font = `9px ${JP}`;
+    ctx.fillText('クリック または [ L ] キー', W / 2, by + bh + 12);
+
+    // 操作（リトライ / タイトル）
     if (this.blinkOn) {
       ctx.fillStyle = '#ffdd44';
-      ctx.font = `bold 13px ${JP}`;
-      ctx.fillText('[ R ] リトライ　　[ Enter ] タイトルへ', W / 2, 222);
+      ctx.font = `bold 12px ${JP}`;
+      ctx.fillText('[ R ] リトライ　　[ Enter ] タイトルへ', W / 2, 250);
     }
 
     ctx.restore();

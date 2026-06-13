@@ -145,6 +145,20 @@ window.addEventListener('keydown', (e) => {
 const fsBtn = document.getElementById('fs-btn');
 if (fsBtn) fsBtn.addEventListener('click', () => { toggleFullscreen(); fsBtn.blur(); });
 
+// ゲームオーバー画面の「ランキングを見る」ボタンのクリック判定。
+// 表示は canvas 上に描画しているため、クリック座標を論理480×270に変換して矩形判定する。
+canvas.addEventListener('click', (e) => {
+  if (state !== STATE.GAMEOVER || !gameOverScreen || !gameOverScreen.rankingBtnRect) return;
+  const r = canvas.getBoundingClientRect();
+  if (!r.width || !r.height) return;
+  const lx = (e.clientX - r.left) / r.width * CANVAS_W;
+  const ly = (e.clientY - r.top) / r.height * CANVAS_H;
+  const b = gameOverScreen.rankingBtnRect;
+  if (lx >= b.x && lx <= b.x + b.w && ly >= b.y && ly <= b.y + b.h) {
+    goToRankingParent();
+  }
+});
+
 function clearUI() {
   uiCtx.save();
   uiCtx.setTransform(1, 0, 0, 1, 0, 0);
@@ -322,11 +336,12 @@ function postGameOverToParent(isVictory) {
     );
     window.parent.postMessage({
       type: 'GRAVE_REAPER_GAME_OVER',
-      payload: {
+      // React側(useGameOverListener)が参照する Score エンティティ用データ
+      score: {
         score,
+        kills: gameStats.killCount,
         stage: currentStage,
         level: player.level,
-        kills: gameStats.killCount,
         gems: gameStats.totalGems,
         victory: !!isVictory,
         play_time: Math.floor(gameStats.elapsedTime),
@@ -335,6 +350,16 @@ function postGameOverToParent(isVictory) {
   } catch (e) {
     // 送信失敗はゲーム進行に影響させない
     console.warn('postMessage to parent failed:', e);
+  }
+}
+
+// ランキング画面への遷移を親(Base44/React)に依頼する。遷移は親側でハンドル。
+function goToRankingParent() {
+  try {
+    if (!window.parent || window.parent === window) return;
+    window.parent.postMessage({ type: 'GRAVE_REAPER_GO_TO_RANKING' }, '*');
+  } catch (e) {
+    console.warn('postMessage(ranking) failed:', e);
   }
 }
 
@@ -529,6 +554,8 @@ function updateGameOver(dt) {
     state = STATE.PLAYING;
   } else if (result === 'title') {
     state = STATE.TITLE;
+  } else if (result === 'ranking') {
+    goToRankingParent();   // 親へランキング遷移を依頼（ゲーム状態は変えない）
   }
 }
 
