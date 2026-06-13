@@ -1,0 +1,12 @@
+{
+  // Base44 サイトホスティング用設定（ゲーセン版をアプリ自身のドメインで配信）。
+  // 既存のバックエンド(functions/entities)はサーバー側にあり、ここでは「サイトのみ」を配信する。
+  // ※ functions/entities のローカル定義は持たないので `base44 deploy` ではなく
+  //   必ず `base44 site deploy` を使うこと（deploy は全リソース同期で既存を壊す恐れ）。
+  "name": "Grave Reaper",
+  "description": "ゴシック・サバイバルアクション（ゲーセン版）",
+  "site": {
+    "buildCommand": "node build-dist.mjs",
+    "outputDirectory": "./dist"
+  }
+}
